@@ -2,10 +2,14 @@
 <html lang="en" class="h-full">
 <head>
   <meta charset="UTF-8">
+  <!-- Cross-Platform: Viewport configured for mobile scaling, notch handling (viewport-fit=cover), and disabling auto-zoom on inputs -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <!-- Cross-Platform: Dynamic theme color for mobile status bars -->
+  <meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
   <title>TheKraftmood Enterprise</title>
   
-  <!-- PWA / Apple Meta Tags -->
+  <!-- PWA / Apple Meta Tags for native-like iOS experience -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="format-detection" content="telephone=no">
@@ -48,6 +52,7 @@
     body { 
         font-family: 'Plus Jakarta Sans', -apple-system, system-ui, sans-serif; 
         background: #F2F2F7;
+        /* Safe area insets to prevent content clipping on notched devices */
         padding-top: env(safe-area-inset-top);
         padding-bottom: env(safe-area-inset-bottom);
         padding-left: env(safe-area-inset-left);
@@ -82,29 +87,69 @@
 
     /* Touch Action Optimizations */
     .btn-apple { 
-        @apply active:scale-95 transition-all duration-200 cursor-pointer select-none; 
+        @apply active:scale-95 transition-transform duration-200 cursor-pointer select-none; 
         touch-action: manipulation;
     }
     
+    /* Highly robust cross-platform CSS for Select elements acting as Pills */
     .status-pill {
-        @apply px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-tight appearance-none border-none text-center min-w-[85px] cursor-pointer transition-colors duration-300;
+        @apply rounded-full text-[10px] font-bold uppercase tracking-widest border-none cursor-pointer transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-iosBlue/50 shadow-sm;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        width: 120px;
+        /* Replaced explicit height with symmetrical padding for perfect vertical centering across all OS engines */
+        padding-top: 10px;
+        padding-bottom: 10px;
+        padding-left: 8px;
+        padding-right: 8px;
+        height: auto;
+        line-height: normal;
+        /* Forced overriding horizontal alignment */
+        text-align: center !important;
+        text-align-last: center !important; 
+        box-sizing: border-box;
+        display: inline-block;
         touch-action: manipulation;
     }
+    /* Fallback for Safari/Legacy select text-align bugs */
+    .status-pill::-ms-expand { display: none; }
 
     /* Table/Card Responsive Logic */
     @media (max-width: 1024px) {
-        .responsive-grid { display: block !important; }
+        .responsive-grid { display: block !important; width: 100%; }
         .responsive-grid thead { display: none; }
         .responsive-grid tr { 
-            @apply apple-card mb-4 block p-4 border border-black/5 dark:border-white/5 rounded-2xl bg-white/50 dark:bg-zinc-900/50 relative overflow-hidden;
+            @apply mb-4 block p-4 border border-black/5 dark:border-white/5 rounded-2xl bg-white/50 dark:bg-zinc-900/50 relative overflow-hidden;
         }
         .responsive-grid td { 
-            display: flex; justify-content: space-between; align-items: center; 
+            display: flex; justify-content: space-between; align-items: center; gap: 1.5rem;
             @apply py-3 border-b border-black/5 dark:border-white/5 last:border-none;
+        }
+        /* Mobile Specific: Align items to top for multi-line text cells */
+        .responsive-grid td.align-top-mobile {
+            align-items: flex-start;
+        }
+        .responsive-grid td.align-top-mobile::before {
+            padding-top: 3px; 
         }
         .responsive-grid td::before {
             content: attr(data-label);
-            @apply font-black text-[10px] text-iosGray uppercase;
+            flex-shrink: 0;
+            width: 30%; /* Fix label width so it never shrinks */
+            @apply font-black text-[10px] text-iosGray uppercase tracking-wider;
+        }
+        .responsive-grid td > div.text-wrapper {
+            flex-grow: 1;
+            min-width: 0; /* Critical: allows flex children to break/wrap instead of blowing out parent width */
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            text-align: right;
+        }
+        .responsive-grid td > select.status-pill {
+            flex-shrink: 0;
+            margin-left: auto; /* Pushes the element to the right side of the flex container natively */
         }
     }
 
@@ -126,158 +171,172 @@
 </head>
 <body class="min-h-screen text-slate-900 dark:text-zinc-100 transition-colors duration-500">
 
-  <!-- Header -->
-  <nav class="sticky top-0 z-40 glass px-4 sm:px-8 py-3 border-b border-black/5">
-    <div class="max-w-7xl mx-auto flex items-center justify-between">
+  <!-- Semantic HTML5 Header -->
+  <header class="sticky top-0 z-40 glass px-4 sm:px-8 py-3 border-b border-black/5">
+    <nav aria-label="Main Navigation" class="max-w-7xl mx-auto flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 sm:w-11 sm:h-11 bg-iosBlue rounded-[12px] flex items-center justify-center text-white text-xl shadow-lg hover:rotate-12 transition-transform duration-300 cursor-pointer">📊</div>
+        <!-- A11y: Ensure interactive non-text elements have explicit roles and labels -->
+        <div aria-hidden="true" class="w-10 h-10 sm:w-11 sm:h-11 bg-iosBlue rounded-[12px] flex items-center justify-center text-white text-xl shadow-lg transition-transform duration-300 cursor-default select-none">📊</div>
         <div>
           <h1 class="text-base sm:text-lg font-extrabold tracking-tight">Kraftmood</h1>
           <p class="text-[9px] font-black text-iosGray uppercase tracking-widest leading-none">Enterprise Suite</p>
         </div>
       </div>
       <div class="flex items-center gap-2">
-        <button onclick="toggleDarkMode()" class="p-3 rounded-full bg-black/5 dark:bg-white/5 transition-colors text-lg" id="themeBtn">🌙</button>
-        <button onclick="openModal()" class="btn-apple bg-iosBlue text-white px-5 py-3 sm:py-2.5 rounded-full text-xs sm:text-[10px] font-black shadow-lg shadow-blue-500/20">
+        <button type="button" aria-label="Toggle Dark Mode" onclick="toggleDarkMode()" class="p-3 rounded-full bg-black/5 dark:bg-white/5 transition-colors text-lg focus-visible:ring-2 focus-visible:ring-iosBlue focus:outline-none" id="themeBtn">🌙</button>
+        <button type="button" onclick="openModal()" class="btn-apple bg-iosBlue text-white px-5 py-3 sm:py-2.5 rounded-full text-xs sm:text-[10px] font-black shadow-lg shadow-blue-500/20 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-iosBlue focus:outline-none">
           NEW ORDER
         </button>
       </div>
-    </div>
-  </nav>
+    </nav>
+  </header>
 
   <main class="max-w-7xl mx-auto p-4 sm:p-8 space-y-6">
 
-    <!-- KPI Section -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-      <div class="glass rounded-apple p-4 sm:p-6 border-l-4 border-l-iosBlue transition-transform duration-300">
-        <p class="text-[9px] font-black text-iosGray uppercase tracking-widest mb-1">Revenue</p>
-        <h2 id="kpiRevenue" class="text-xl md:text-3xl font-extrabold" data-prefix="₹">₹0</h2>
-        <div id="kpiCount" class="text-[9px] font-bold text-iosGray mt-1 transition-all">0 Orders</div>
-      </div>
-      <div class="glass rounded-apple p-4 sm:p-6 border-l-4 border-l-iosGreen transition-transform duration-300">
-        <p class="text-[9px] font-black text-iosGray uppercase tracking-widest mb-1">Total Profit</p>
-        <h2 id="kpiTotalOwner" class="text-xl md:text-3xl font-extrabold text-iosGreen" data-prefix="₹">₹0</h2>
-        <div id="kpiOwnerSub" class="text-[9px] font-bold text-iosGray mt-1">L+P</div>
-      </div>
-      <div class="glass rounded-apple p-4 sm:p-6 border-l-4 border-l-purple-500 transition-transform duration-300">
-        <p class="text-[9px] font-black text-iosGray uppercase tracking-widest mb-1">Net Margin</p>
-        <h2 id="kpiMargin" class="text-xl md:text-3xl font-extrabold text-purple-500" data-suffix="%">0%</h2>
-        <div id="kpiCost" class="text-[9px] font-bold text-iosGray mt-1">Cost: ₹0</div>
-      </div>
-      <div class="glass rounded-apple p-4 sm:p-6 border-l-4 border-l-orange-400 transition-transform duration-300">
-        <p class="text-[9px] font-black text-iosGray uppercase tracking-widest mb-1">Collected</p>
-        <h2 id="kpiPaid" class="text-xl md:text-3xl font-extrabold" data-prefix="₹">₹0</h2>
-        <div class="w-full bg-black/5 dark:bg-white/10 h-1.5 rounded-full mt-2 overflow-hidden">
+    <!-- KPI Section: Replaced div soup with semantic section and ARIA labeling -->
+    <section aria-labelledby="kpi-heading" class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <h2 id="kpi-heading" class="sr-only">Key Performance Indicators</h2>
+      <article class="glass rounded-apple p-4 sm:p-6 border-l-4 border-l-iosBlue transition-transform duration-300">
+        <h3 class="text-[9px] font-black text-iosGray uppercase tracking-widest mb-1">Revenue</h3>
+        <p id="kpiRevenue" class="text-xl md:text-3xl font-extrabold" data-prefix="₹">₹0</p>
+        <div id="kpiCount" aria-live="polite" class="text-[9px] font-bold text-iosGray mt-1 transition-all">0 Orders</div>
+      </article>
+      <article class="glass rounded-apple p-4 sm:p-6 border-l-4 border-l-iosGreen transition-transform duration-300">
+        <h3 class="text-[9px] font-black text-iosGray uppercase tracking-widest mb-1">Total Profit</h3>
+        <p id="kpiTotalOwner" class="text-xl md:text-3xl font-extrabold text-iosGreen" data-prefix="₹">₹0</p>
+        <div id="kpiOwnerSub" aria-live="polite" class="text-[9px] font-bold text-iosGray mt-1">L+P</div>
+      </article>
+      <article class="glass rounded-apple p-4 sm:p-6 border-l-4 border-l-purple-500 transition-transform duration-300">
+        <h3 class="text-[9px] font-black text-iosGray uppercase tracking-widest mb-1">Net Margin</h3>
+        <p id="kpiMargin" class="text-xl md:text-3xl font-extrabold text-purple-500" data-suffix="%">0%</p>
+        <div id="kpiCost" aria-live="polite" class="text-[9px] font-bold text-iosGray mt-1">Cost: ₹0</div>
+      </article>
+      <article class="glass rounded-apple p-4 sm:p-6 border-l-4 border-l-orange-400 transition-transform duration-300">
+        <h3 class="text-[9px] font-black text-iosGray uppercase tracking-widest mb-1">Collected</h3>
+        <p id="kpiPaid" class="text-xl md:text-3xl font-extrabold" data-prefix="₹">₹0</p>
+        <div class="w-full bg-black/5 dark:bg-white/10 h-1.5 rounded-full mt-2 overflow-hidden" role="progressbar" aria-label="Percentage collected">
           <div id="kpiPaidBar" class="bg-gradient-to-r from-orange-400 to-iosBlue h-full transition-all duration-1000 w-0"></div>
         </div>
-      </div>
-    </div>
+      </article>
+    </section>
 
-    <!-- Toolbar -->
-    <div class="flex flex-col md:flex-row gap-3 items-center glass p-3 sm:p-4 rounded-apple">
-        <!-- Wrap in form so iPad keyboard 'Search/Go' dismisses the keyboard properly -->
+    <!-- Toolbar Section -->
+    <section aria-labelledby="toolbar-heading" class="flex flex-col md:flex-row gap-3 items-center glass p-3 sm:p-4 rounded-apple">
+        <h2 id="toolbar-heading" class="sr-only">Data Controls and Search</h2>
+        
         <form class="relative w-full group" onsubmit="event.preventDefault(); document.getElementById('searchInput').blur();">
-            <span class="absolute left-4 top-3.5 sm:top-3 text-zinc-400 transition-colors">🔍</span>
-            <input type="text" id="searchInput" oninput="render()" placeholder="Search clients, items, location..." 
+            <label for="searchInput" class="sr-only">Search database</label>
+            <span class="absolute left-4 top-3.5 sm:top-3 text-zinc-400 transition-colors" aria-hidden="true">🔍</span>
+            <input type="search" id="searchInput" oninput="handleSearch()" placeholder="Search clients, items, location..." 
                    class="w-full bg-white/50 dark:bg-black/20 rounded-full py-3 sm:py-2.5 pl-11 pr-10 text-base sm:text-sm focus:ring-2 focus:ring-iosBlue border-none transition-all outline-none">
-            <button type="button" onclick="document.getElementById('searchInput').value=''; render();" class="absolute right-4 top-3.5 sm:top-3 text-zinc-400 opacity-0 focus-within:opacity-100 transition-opacity" id="clearSearch">✕</button>
+            <button type="button" aria-label="Clear search" onclick="document.getElementById('searchInput').value=''; handleSearch();" class="absolute right-4 top-3.5 sm:top-3 text-zinc-400 opacity-0 focus-within:opacity-100 hover:text-zinc-600 transition-opacity p-1 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-iosBlue rounded-full" id="clearSearch">✕</button>
         </form>
+        
         <div class="flex gap-2 w-full md:w-auto">
-            <button onclick="document.getElementById('xlIn').click()" class="flex-1 px-5 py-3 sm:py-2.5 glass rounded-full text-xs sm:text-[10px] font-black uppercase tracking-widest btn-apple">Import Data</button>
-            <button onclick="exportData()" class="flex-1 px-5 py-3 sm:py-2.5 bg-zinc-900 dark:bg-white text-white dark:text-black rounded-full text-xs sm:text-[10px] font-black uppercase tracking-widest btn-apple">Export</button>
+            <button type="button" onclick="document.getElementById('xlIn').click()" class="flex-1 px-5 py-3 sm:py-2.5 glass rounded-full text-xs sm:text-[10px] font-black uppercase tracking-widest btn-apple focus-visible:ring-2 focus-visible:ring-iosBlue focus:outline-none whitespace-nowrap">Import Data</button>
+            <button type="button" onclick="exportData()" class="flex-1 px-5 py-3 sm:py-2.5 bg-zinc-900 dark:bg-white text-white dark:text-black rounded-full text-xs sm:text-[10px] font-black uppercase tracking-widest btn-apple focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-iosBlue focus:outline-none">Export</button>
         </div>
-    </div>
+    </section>
 
-    <!-- Data Display -->
-    <div class="overflow-x-auto rounded-apple pb-10">
-      <table class="w-full text-left responsive-grid" id="mainTable">
-        <thead class="text-[10px] font-black text-iosGray uppercase tracking-widest bg-black/5 dark:bg-white/5">
-          <tr>
-            <th class="px-6 py-4 sortable rounded-tl-2xl" onclick="setSort('name')">Customer <span class="sort-icon">▼</span></th>
-            <th class="px-6 py-4 sortable" onclick="setSort('product')">Product <span class="sort-icon">▼</span></th>
-            <th class="px-6 py-4 sortable text-right" onclick="setSort('price')">Price <span class="sort-icon">▼</span></th>
-            <th class="px-6 py-4 sortable text-right" onclick="setSort('profit')">Profit <span class="sort-icon">▼</span></th>
-            <th class="px-6 py-4 text-center">Status</th>
-            <th class="px-6 py-4 text-center">Payment</th>
-            <th class="px-6 py-4 text-right rounded-tr-2xl">Actions</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody" class="divide-y divide-black/5 dark:divide-white/10">
-          <!-- JS Render -->
-        </tbody>
-      </table>
-    </div>
+    <!-- Data Display Section -->
+    <section aria-labelledby="table-heading" class="rounded-apple pb-10">
+      <h2 id="table-heading" class="sr-only">Orders Table</h2>
+      
+      <div class="overflow-x-auto w-full">
+        <table class="w-full text-left responsive-grid" id="mainTable">
+          <thead class="text-[10px] font-black text-iosGray uppercase tracking-widest bg-black/5 dark:bg-white/5">
+            <tr>
+              <th scope="col" class="px-6 py-4 sortable rounded-tl-2xl focus-visible:ring-2 focus-visible:ring-iosBlue focus-visible:outline-none" tabindex="0" onclick="setSort('name')" onkeypress="if(event.key==='Enter') setSort('name')">Customer <span class="sort-icon" aria-hidden="true">▼</span></th>
+              <th scope="col" class="px-6 py-4 sortable focus-visible:ring-2 focus-visible:ring-iosBlue focus-visible:outline-none" tabindex="0" onclick="setSort('product')" onkeypress="if(event.key==='Enter') setSort('product')">Product <span class="sort-icon" aria-hidden="true">▼</span></th>
+              <th scope="col" class="px-6 py-4 sortable text-right focus-visible:ring-2 focus-visible:ring-iosBlue focus-visible:outline-none" tabindex="0" onclick="setSort('price')" onkeypress="if(event.key==='Enter') setSort('price')">Price <span class="sort-icon" aria-hidden="true">▼</span></th>
+              <th scope="col" class="px-6 py-4 sortable text-right focus-visible:ring-2 focus-visible:ring-iosBlue focus-visible:outline-none" tabindex="0" onclick="setSort('profit')" onkeypress="if(event.key==='Enter') setSort('profit')">Profit <span class="sort-icon" aria-hidden="true">▼</span></th>
+              <th scope="col" class="px-6 py-4 text-center">Status</th>
+              <th scope="col" class="px-6 py-4 text-center">Payment</th>
+              <th scope="col" class="px-6 py-4 text-right rounded-tr-2xl">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody" class="divide-y divide-black/5 dark:divide-white/10" aria-live="polite">
+            <!-- JS Render Target -->
+          </tbody>
+        </table>
+      </div>
 
-    <div id="emptyState" class="hidden py-24 flex flex-col items-center justify-center space-y-4">
-      <div class="text-6xl opacity-20 grayscale">📭</div>
-      <p class="text-iosGray font-black uppercase text-xs tracking-widest opacity-60">Zero records found</p>
-      <button onclick="openModal()" class="text-xs sm:text-[10px] text-iosBlue font-bold underline p-2">Add your first order</button>
-    </div>
+      <!-- Cross-Platform Numbered Pagination -->
+      <nav id="paginationContainer" aria-label="Table Navigation" class="hidden flex justify-center items-center gap-2 mt-8 pb-4">
+          <!-- Rendered via JS -->
+      </nav>
+
+      <!-- Empty State -->
+      <div id="emptyState" class="hidden py-24 flex flex-col items-center justify-center space-y-4 text-center" aria-live="polite">
+        <div class="text-6xl opacity-20 grayscale" aria-hidden="true">📭</div>
+        <p class="text-iosGray font-black uppercase text-xs tracking-widest opacity-60">Zero records found</p>
+        <button type="button" onclick="openModal()" class="text-xs sm:text-[10px] text-iosBlue font-bold underline p-2 focus-visible:ring-2 focus-visible:ring-iosBlue rounded focus:outline-none">Add your first order</button>
+      </div>
+    </section>
 
   </main>
 
   <!-- iOS Styled Modal -->
-  <div id="modalOverlay" class="fixed inset-0 z-[100] bg-black/60 backdrop-blur-md hidden items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+  <div id="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle" class="fixed inset-0 z-[100] bg-black/60 backdrop-blur-md hidden items-center justify-center p-4 opacity-0 transition-opacity duration-300">
     <div id="modalContent" class="glass w-full max-w-xl rounded-[28px] overflow-hidden shadow-2xl transform scale-95 translate-y-4 transition-all duration-300 -webkit-overflow-scrolling-touch">
-      <div class="px-6 py-5 border-b border-black/5 flex justify-between items-center bg-white/40 dark:bg-black/40">
+      <header class="px-6 py-5 border-b border-black/5 flex justify-between items-center bg-white/40 dark:bg-black/40">
         <h2 class="text-lg font-bold" id="modalTitle">Order Entry</h2>
-        <button onclick="closeModal()" class="w-10 h-10 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center font-bold btn-apple">✕</button>
-      </div>
+        <button type="button" aria-label="Close Modal" onclick="closeModal()" class="w-10 h-10 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center font-bold btn-apple focus-visible:ring-2 focus-visible:ring-iosBlue focus:outline-none">✕</button>
+      </header>
 
       <form onsubmit="handleForm(event)" class="p-6 space-y-5 max-h-[80vh] overflow-y-auto no-scrollbar relative">
         <input type="hidden" id="fId">
         
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div class="space-y-1">
-            <label class="text-[10px] font-black text-iosGray uppercase tracking-tighter ml-1">Client Name</label>
-            <input type="text" id="fName" required class="w-full bg-white/80 dark:bg-zinc-800/80 backdrop-blur-md rounded-xl p-3.5 text-base sm:text-sm focus:ring-2 focus:ring-iosBlue border-none ring-1 ring-black/5">
+            <label for="fName" class="text-[10px] font-black text-iosGray uppercase tracking-tighter ml-1">Client Name</label>
+            <input type="text" id="fName" required class="w-full bg-white/80 dark:bg-zinc-800/80 backdrop-blur-md rounded-xl p-3.5 text-base sm:text-sm focus:ring-2 focus:ring-iosBlue border-none ring-1 ring-black/5 outline-none transition-all">
           </div>
           <div class="space-y-1">
-            <label class="text-[10px] font-black text-iosGray uppercase tracking-tighter ml-1">City/Location</label>
-            <input type="text" id="fLoc" class="w-full bg-white/80 dark:bg-zinc-800/80 backdrop-blur-md rounded-xl p-3.5 text-base sm:text-sm focus:ring-2 focus:ring-iosBlue border-none ring-1 ring-black/5">
+            <label for="fLoc" class="text-[10px] font-black text-iosGray uppercase tracking-tighter ml-1">City/Location (Optional)</label>
+            <input type="text" id="fLoc" class="w-full bg-white/80 dark:bg-zinc-800/80 backdrop-blur-md rounded-xl p-3.5 text-base sm:text-sm focus:ring-2 focus:ring-iosBlue border-none ring-1 ring-black/5 outline-none transition-all">
           </div>
         </div>
 
         <div class="space-y-1">
-          <label class="text-[10px] font-black text-iosGray uppercase tracking-tighter ml-1">Product Details</label>
-          <input type="text" id="fProd" required class="w-full bg-white/80 dark:bg-zinc-800/80 backdrop-blur-md rounded-xl p-3.5 text-base sm:text-sm focus:ring-2 focus:ring-iosBlue border-none ring-1 ring-black/5">
+          <label for="fProd" class="text-[10px] font-black text-iosGray uppercase tracking-tighter ml-1">Product Details</label>
+          <input type="text" id="fProd" required class="w-full bg-white/80 dark:bg-zinc-800/80 backdrop-blur-md rounded-xl p-3.5 text-base sm:text-sm focus:ring-2 focus:ring-iosBlue border-none ring-1 ring-black/5 outline-none transition-all">
         </div>
 
-        <!-- Financial Block: Added inputmode="decimal" for proper iPad Keyboards -->
-        <div class="bg-iosBlue/5 dark:bg-iosBlue/10 p-5 rounded-[20px] ring-1 ring-iosBlue/20 space-y-4 relative overflow-hidden group">
-          <div class="absolute inset-0 bg-gradient-to-br from-iosBlue/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        <fieldset class="bg-iosBlue/5 dark:bg-iosBlue/10 p-5 rounded-[20px] ring-1 ring-iosBlue/20 space-y-4 relative overflow-hidden group">
+          <div class="absolute inset-0 bg-gradient-to-br from-iosBlue/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true"></div>
           <div class="flex justify-between items-center relative z-10">
-            <p class="text-[10px] font-black text-iosBlue uppercase tracking-widest">Financial Ledger (₹)</p>
-            <span id="liveProfit" class="bg-iosGreen/20 text-iosGreen px-3 py-1.5 rounded-full text-[10px] font-black transition-colors duration-300">PROFIT: ₹0</span>
+            <legend class="text-[10px] font-black text-iosBlue uppercase tracking-widest">Financial Ledger (₹)</legend>
+            <span id="liveProfit" aria-live="polite" class="bg-iosGreen/20 text-iosGreen px-3 py-1.5 rounded-full text-[10px] font-black transition-colors duration-300">PROFIT: ₹0</span>
           </div>
           <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 relative z-10">
-            <input type="number" inputmode="decimal" id="fPrice" oninput="liveCalc()" placeholder="Price" required class="bg-white/90 dark:bg-zinc-800/90 p-3 sm:p-2 rounded-lg text-base sm:text-xs font-bold border-none ring-1 ring-black/5">
-            <input type="number" inputmode="decimal" id="fMat" oninput="liveCalc()" placeholder="Mat" class="bg-white/90 dark:bg-zinc-800/90 p-3 sm:p-2 rounded-lg text-base sm:text-xs border-none ring-1 ring-black/5">
-            <input type="number" inputmode="decimal" id="fLab" oninput="liveCalc()" placeholder="Lab" class="bg-white/90 dark:bg-zinc-800/90 p-3 sm:p-2 rounded-lg text-base sm:text-xs border-none ring-1 ring-black/5">
-            <input type="number" inputmode="decimal" id="fPkg" oninput="liveCalc()" placeholder="Box" class="bg-white/90 dark:bg-zinc-800/90 p-3 sm:p-2 rounded-lg text-base sm:text-xs border-none ring-1 ring-black/5">
-            <input type="number" inputmode="decimal" id="fDel" oninput="liveCalc()" placeholder="Ship" class="bg-white/90 dark:bg-zinc-800/90 p-3 sm:p-2 rounded-lg text-base sm:text-xs border-none ring-1 ring-black/5">
+            <input type="number" aria-label="Selling Price" inputmode="decimal" id="fPrice" oninput="liveCalc()" placeholder="Price" required class="bg-white/90 dark:bg-zinc-800/90 p-3 sm:p-2 rounded-lg text-base sm:text-xs font-bold border-none ring-1 ring-black/5 focus:ring-2 focus:ring-iosBlue outline-none transition-all">
+            <input type="number" aria-label="Material Cost" inputmode="decimal" id="fMat" oninput="liveCalc()" placeholder="Mat" class="bg-white/90 dark:bg-zinc-800/90 p-3 sm:p-2 rounded-lg text-base sm:text-xs border-none ring-1 ring-black/5 focus:ring-2 focus:ring-iosBlue outline-none transition-all">
+            <input type="number" aria-label="Labour Cost" inputmode="decimal" id="fLab" oninput="liveCalc()" placeholder="Lab" class="bg-white/90 dark:bg-zinc-800/90 p-3 sm:p-2 rounded-lg text-base sm:text-xs border-none ring-1 ring-black/5 focus:ring-2 focus:ring-iosBlue outline-none transition-all">
+            <input type="number" aria-label="Packaging Cost" inputmode="decimal" id="fPkg" oninput="liveCalc()" placeholder="Box" class="bg-white/90 dark:bg-zinc-800/90 p-3 sm:p-2 rounded-lg text-base sm:text-xs border-none ring-1 ring-black/5 focus:ring-2 focus:ring-iosBlue outline-none transition-all">
+            <input type="number" aria-label="Shipping Cost" inputmode="decimal" id="fDel" oninput="liveCalc()" placeholder="Ship" class="bg-white/90 dark:bg-zinc-800/90 p-3 sm:p-2 rounded-lg text-base sm:text-xs border-none ring-1 ring-black/5 focus:ring-2 focus:ring-iosBlue outline-none transition-all">
           </div>
-        </div>
+        </fieldset>
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-            <select id="fMaking" class="bg-white/80 dark:bg-zinc-800/80 rounded-xl p-4 sm:p-3 text-base sm:text-xs font-bold border-none ring-1 ring-black/5 focus:ring-2 focus:ring-iosBlue outline-none">
+            <select id="fMaking" aria-label="Making Status" class="bg-white/80 dark:bg-zinc-800/80 rounded-xl p-4 sm:p-3 text-base sm:text-xs font-bold border-none ring-1 ring-black/5 focus:ring-2 focus:ring-iosBlue outline-none cursor-pointer">
                 <option value="Done">Done</option>
                 <option value="In Progress">In Progress</option>
                 <option value="Not Started">Not Started</option>
             </select>
-            <select id="fDelivery" class="bg-white/80 dark:bg-zinc-800/80 rounded-xl p-4 sm:p-3 text-base sm:text-xs font-bold border-none ring-1 ring-black/5 focus:ring-2 focus:ring-iosBlue outline-none">
+            <select id="fDelivery" aria-label="Delivery Status" class="bg-white/80 dark:bg-zinc-800/80 rounded-xl p-4 sm:p-3 text-base sm:text-xs font-bold border-none ring-1 ring-black/5 focus:ring-2 focus:ring-iosBlue outline-none cursor-pointer">
                 <option value="Delivered">Delivered</option>
                 <option value="Dispatched">Dispatched</option>
                 <option value="Pending">Pending</option>
             </select>
-            <select id="fPayment" class="bg-white/80 dark:bg-zinc-800/80 rounded-xl p-4 sm:p-3 text-base sm:text-xs font-bold border-none ring-1 ring-black/5 focus:ring-2 focus:ring-iosBlue outline-none">
+            <select id="fPayment" aria-label="Payment Status" class="bg-white/80 dark:bg-zinc-800/80 rounded-xl p-4 sm:p-3 text-base sm:text-xs font-bold border-none ring-1 ring-black/5 focus:ring-2 focus:ring-iosBlue outline-none cursor-pointer">
                 <option value="Paid">Fully Paid</option>
                 <option value="Advance Received">Advance</option>
                 <option value="Pending Payment">Pending Due</option>
             </select>
         </div>
 
-        <button type="submit" class="w-full bg-iosBlue text-white py-4 sm:py-4 rounded-xl font-black text-xs sm:text-xs tracking-widest shadow-xl shadow-blue-500/30 btn-apple mt-6 uppercase transition-all">
+        <button type="submit" class="w-full bg-iosBlue text-white py-4 sm:py-4 rounded-xl font-black text-xs sm:text-xs tracking-widest shadow-xl shadow-blue-500/30 btn-apple mt-6 uppercase transition-all focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-iosBlue focus:outline-none">
             Synchronize Record
         </button>
       </form>
@@ -285,50 +344,60 @@
   </div>
 
   <!-- Custom Confirm Dialog -->
-  <div id="confirmDialog" class="fixed inset-0 z-[200] bg-black/40 backdrop-blur-sm hidden items-center justify-center p-4 opacity-0 transition-opacity duration-200">
+  <div id="confirmDialog" role="alertdialog" aria-modal="true" aria-labelledby="confirmTitle" aria-describedby="confirmDesc" class="fixed inset-0 z-[200] bg-black/40 backdrop-blur-sm hidden items-center justify-center p-4 opacity-0 transition-opacity duration-200">
       <div class="glass w-full max-w-sm rounded-[24px] p-6 text-center transform scale-95 transition-transform duration-200 shadow-2xl" id="confirmBox">
-          <div class="text-5xl mb-4">⚠️</div>
-          <h3 class="text-xl font-bold mb-2">Delete Record?</h3>
-          <p class="text-sm text-iosGray font-medium mb-6">This action cannot be undone. This record will be permanently removed.</p>
+          <div class="text-5xl mb-4" aria-hidden="true">⚠️</div>
+          <h3 id="confirmTitle" class="text-xl font-bold mb-2">Delete Record?</h3>
+          <p id="confirmDesc" class="text-sm text-iosGray font-medium mb-6">This action cannot be undone. This record will be permanently removed.</p>
           <div class="flex gap-3">
-              <button onclick="closeConfirm()" class="flex-1 py-4 sm:py-3 rounded-xl bg-black/5 dark:bg-white/10 font-bold text-sm sm:text-xs btn-apple">Cancel</button>
-              <button id="confirmBtn" class="flex-1 py-4 sm:py-3 rounded-xl bg-iosRed text-white font-bold text-sm sm:text-xs shadow-lg shadow-red-500/30 btn-apple">Delete</button>
+              <button type="button" onclick="closeConfirm()" class="flex-1 py-4 sm:py-3 rounded-xl bg-black/5 dark:bg-white/10 font-bold text-sm sm:text-xs btn-apple focus-visible:ring-2 focus-visible:ring-iosGray focus:outline-none">Cancel</button>
+              <button type="button" id="confirmBtn" class="flex-1 py-4 sm:py-3 rounded-xl bg-iosRed text-white font-bold text-sm sm:text-xs shadow-lg shadow-red-500/30 btn-apple focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-iosRed focus:outline-none">Delete</button>
           </div>
       </div>
   </div>
 
-  <input type="file" id="xlIn" class="hidden" accept=".xlsx, .xls, .csv" onchange="importExcel(event)">
-  <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[300] bg-zinc-900/95 dark:bg-white/95 backdrop-blur-xl text-white dark:text-black px-6 py-3.5 rounded-full text-[10px] font-black shadow-2xl opacity-0 translate-y-10 transition-all duration-300">
-      <span id="toastIcon">✓</span> <span id="toastMsg">Success</span>
+  <!-- Hidden File Input -->
+  <label for="xlIn" class="sr-only">Upload Excel File</label>
+  <input type="file" id="xlIn" class="hidden" accept=".xlsx, .xls, .csv" onchange="importExcel(event)" aria-hidden="true">
+  
+  <!-- Accessible Global Toast -->
+  <div id="toast" role="alert" aria-live="assertive" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[300] bg-zinc-900/95 dark:bg-white/95 backdrop-blur-xl text-white dark:text-black px-6 py-3.5 rounded-full text-[10px] font-black shadow-2xl opacity-0 translate-y-10 transition-all duration-300 pointer-events-none flex items-center gap-2">
+      <span id="toastIcon" aria-hidden="true">✓</span> <span id="toastMsg" class="uppercase tracking-widest">Success</span>
   </div>
 
   <script>
-    // System Config
     const DB_KEY = 'kraftmood_enterprise_v7';
-    let db = JSON.parse(localStorage.getItem(DB_KEY)) || [];
+    
+    // Robust local storage fetching to prevent JSON parse errors
+    let db = [];
+    try {
+        db = JSON.parse(localStorage.getItem(DB_KEY)) || [];
+    } catch (e) {
+        db = [];
+    }
+
     let currentSort = { col: 'date', asc: false }; 
     let confirmCallback = null;
+    
+    // Pagination State
+    let currentPage = 1;
+    const ITEMS_PER_PAGE = 5;
 
-    // Custom iPad/iOS Double Tap Logic
     let lastTapId = null;
     let lastTapTime = 0;
 
     function handleRowInteraction(e, id) {
-        // Prevent triggering if clicking a button or dropdown inside the row
         if (['SELECT', 'BUTTON', 'OPTION'].includes(e.target.tagName) || e.target.closest('button')) {
             return;
         }
-        
         const now = new Date().getTime();
         const timeDiff = now - lastTapTime;
 
         if (lastTapId === id && timeDiff < 400 && timeDiff > 0) {
-            // Double Tap Detected
             editOrder(id);
-            lastTapId = null; // Reset
+            lastTapId = null; 
             e.preventDefault();
         } else {
-            // Single Tap
             lastTapId = id;
             lastTapTime = now;
         }
@@ -349,7 +418,6 @@
         }
     };
 
-    // Smooth Number Animation
     function animateValue(id, start, end, duration) {
         const obj = document.getElementById(id);
         if(!obj) return;
@@ -381,7 +449,19 @@
 
     let prevStats = { rev: 0, profit: 0, labour: 0, margin: 0, paid: 0 };
 
+    function handleSearch() {
+        currentPage = 1;
+        render();
+    }
+
+    function changePage(page) {
+        currentPage = page;
+        render();
+        document.getElementById('mainTable').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
     function setSort(col) {
+        currentPage = 1;
         if (currentSort.col === col) {
             currentSort.asc = !currentSort.asc;
         } else {
@@ -411,18 +491,18 @@
         }
 
         let filtered = db.filter(o => 
-            o.name.toLowerCase().includes(query) || 
-            o.product.toLowerCase().includes(query) || 
+            (o.name || '').toLowerCase().includes(query) || 
+            (o.product || '').toLowerCase().includes(query) || 
             (o.location && o.location.toLowerCase().includes(query))
         );
 
-        // Sort Data
+        // Sort Data - ID fallback functions perfectly as newest first since IDs are based on timestamps
         filtered.sort((a, b) => {
             let valA = a[currentSort.col];
             let valB = b[currentSort.col];
             
             if (currentSort.col === 'price' || currentSort.col === 'profit') {
-                valA = Number(valA); valB = Number(valB);
+                valA = Number(valA) || 0; valB = Number(valB) || 0;
             } else if (currentSort.col === 'name' || currentSort.col === 'product') {
                 valA = (valA || '').toLowerCase(); valB = (valB || '').toLowerCase();
             } else {
@@ -434,7 +514,6 @@
             return 0;
         });
 
-        // Stats Logic
         const stats = filtered.reduce((acc, o) => {
             const p = Number(o.price || 0);
             const prof = Number(o.profit || 0);
@@ -469,47 +548,94 @@
 
         prevStats = { rev: stats.rev, profit: stats.profit, labour: stats.labour, margin: margin, paid: stats.paid };
 
-        // Table Render
         const tbody = document.getElementById('tableBody');
         const empty = document.getElementById('emptyState');
+        const paginationContainer = document.getElementById('paginationContainer');
         
         if (filtered.length === 0) {
             tbody.innerHTML = "";
             empty.classList.remove('hidden');
+            paginationContainer.classList.add('hidden');
             return;
         }
         empty.classList.add('hidden');
 
-        /* 
-          Note: Removed pure 'ondblclick' because iOS ignores it.
-          Replaced with 'onclick="handleRowInteraction()"' which supports both desktop single clicks and touch double-taps seamlessly. 
-        */
-        tbody.innerHTML = filtered.map((o, i) => `
+        // Robust Numbered Pagination Logic
+        const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+        if (currentPage > totalPages) currentPage = totalPages;
+        if (currentPage < 1) currentPage = 1;
+
+        if (totalPages > 1) {
+            let paginationHTML = `
+                <button type="button" aria-label="Previous Page" onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled class="w-10 h-10 flex items-center justify-center rounded-full glass font-bold text-iosGray opacity-50 cursor-not-allowed"' : 'class="w-10 h-10 flex items-center justify-center rounded-full glass font-bold text-iosGray hover:text-iosBlue transition-colors btn-apple"'}>&lt;</button>
+            `;
+
+            for (let i = 1; i <= totalPages; i++) {
+                if (totalPages > 7 && (i !== 1 && i !== totalPages && Math.abs(currentPage - i) > 1)) {
+                    if (Math.abs(currentPage - i) === 2) {
+                        paginationHTML += `<span class="w-10 h-10 flex items-center justify-center font-bold text-iosGray/50" aria-hidden="true">...</span>`;
+                    }
+                    continue;
+                }
+
+                if (i === currentPage) {
+                    paginationHTML += `<button type="button" aria-current="page" aria-label="Page ${i}" class="w-10 h-10 flex items-center justify-center rounded-full bg-iosBlue text-white font-bold shadow-md shadow-blue-500/20 btn-apple">${i}</button>`;
+                } else {
+                    paginationHTML += `<button type="button" aria-label="Page ${i}" onclick="changePage(${i})" class="w-10 h-10 flex items-center justify-center rounded-full glass font-bold text-iosGray hover:text-iosBlue transition-colors btn-apple">${i}</button>`;
+                }
+            }
+
+            paginationHTML += `
+                <button type="button" aria-label="Next Page" onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled class="w-10 h-10 flex items-center justify-center rounded-full glass font-bold text-iosGray opacity-50 cursor-not-allowed"' : 'class="w-10 h-10 flex items-center justify-center rounded-full glass font-bold text-iosGray hover:text-iosBlue transition-colors btn-apple"'}>&gt;</button>
+            `;
+            
+            paginationContainer.innerHTML = paginationHTML;
+            paginationContainer.classList.remove('hidden');
+            paginationContainer.classList.add('flex');
+        } else {
+            paginationContainer.innerHTML = '';
+            paginationContainer.classList.add('hidden');
+            paginationContainer.classList.remove('flex');
+        }
+
+        const paginated = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+        // Conditional location rendering: Entirely removes 'Local' default and only displays span if location is truthy.
+        // Removed text-align overrides directly on the <td> for selects so the pill retains internal alignment.
+        tbody.innerHTML = paginated.map((o, i) => `
             <tr onclick="handleRowInteraction(event, '${o.id}')" class="transition-colors duration-200 animate-entry group cursor-pointer hover:bg-black/5 dark:hover:bg-white/5" style="animation-delay: ${i * 30}ms;">
-                <td data-label="Customer" class="px-6 py-4">
-                    <div class="font-bold text-sm truncate max-w-[150px] hover-target">${o.name}</div>
-                    <div class="text-[10px] font-black text-iosGray uppercase tracking-tighter mt-0.5">${o.location || 'Local'}</div>
+                <td data-label="Customer" class="px-6 py-4 align-top-mobile">
+                    <div class="text-wrapper w-full">
+                        <span class="font-bold text-sm text-wrap break-words line-clamp-2 max-w-[200px] lg:max-w-[250px] hover-target" title="${o.name || 'Unknown'}">${o.name || 'Unknown'}</span>
+                        ${o.location && o.location.trim() !== '' ? `<span class="text-[10px] font-black text-iosGray uppercase tracking-tighter mt-0.5 text-wrap break-words line-clamp-1 max-w-[200px] lg:max-w-[250px]" title="${o.location}">${o.location}</span>` : ''}
+                    </div>
                 </td>
-                <td data-label="Product" class="px-6 py-4 font-medium opacity-80 text-xs sm:text-sm">${o.product}</td>
-                <td data-label="Price" class="px-6 py-4 text-right font-black text-iosBlue text-sm">₹${Number(o.price).toLocaleString()}</td>
-                <td data-label="Profit" class="px-6 py-4 text-right font-black text-sm ${Number(o.profit) >= 0 ? 'text-iosGreen' : 'text-iosRed'}">₹${Number(o.profit).toLocaleString()}</td>
-                <td data-label="Making" class="px-6 py-4 text-center">
-                    <select onchange="updateStatus('${o.id}', 'making', this.value)" class="status-pill ${getMakeStyle(o.making)}">
+                <td data-label="Product" class="px-6 py-4 align-top-mobile">
+                    <div class="text-wrapper font-medium opacity-80 text-xs sm:text-sm text-wrap break-words line-clamp-2 max-w-[200px] lg:max-w-[280px]" title="${o.product || ''}">
+                        ${o.product || 'No details'}
+                    </div>
+                </td>
+                <td data-label="Price" class="px-6 py-4 text-right font-black text-iosBlue text-sm whitespace-nowrap">₹${(Number(o.price) || 0).toLocaleString()}</td>
+                <td data-label="Profit" class="px-6 py-4 text-right font-black text-sm whitespace-nowrap ${(Number(o.profit) || 0) >= 0 ? 'text-iosGreen' : 'text-iosRed'}">₹${(Number(o.profit) || 0).toLocaleString()}</td>
+                <td data-label="Making" class="px-6 py-4 lg:text-center">
+                    <select aria-label="Update Making Status" onchange="updateStatus('${o.id}', 'making', this.value)" class="status-pill ${getMakeStyle(o.making)}">
                         <option value="Done" ${o.making === 'Done' ? 'selected' : ''}>Done</option>
                         <option value="In Progress" ${o.making === 'In Progress' ? 'selected' : ''}>Progress</option>
                         <option value="Not Started" ${o.making === 'Not Started' ? 'selected' : ''}>Pending</option>
                     </select>
                 </td>
-                <td data-label="Payment" class="px-6 py-4 text-center">
-                    <select onchange="updateStatus('${o.id}', 'payment', this.value)" class="status-pill ${getPayStyle(o.payment)}">
+                <td data-label="Payment" class="px-6 py-4 lg:text-center">
+                    <select aria-label="Update Payment Status" onchange="updateStatus('${o.id}', 'payment', this.value)" class="status-pill ${getPayStyle(o.payment)}">
                         <option value="Paid" ${o.payment === 'Paid' ? 'selected' : ''}>Paid</option>
                         <option value="Advance Received" ${o.payment === 'Advance Received' ? 'selected' : ''}>Advance</option>
                         <option value="Pending Payment" ${o.payment === 'Pending Payment' ? 'selected' : ''}>Due</option>
                     </select>
                 </td>
-                <td class="px-6 py-4 text-right space-x-2">
-                    <button type="button" onclick="editOrder('${o.id}'); event.stopPropagation();" class="p-2 text-[10px] sm:text-xs font-black text-iosBlue opacity-80 hover:opacity-100 transition-opacity">✎</button>
-                    <button type="button" onclick="confirmDelete('${o.id}'); event.stopPropagation();" class="p-2 text-[10px] sm:text-xs font-black text-iosRed opacity-80 hover:opacity-100 transition-opacity">🗑️</button>
+                <td data-label="Actions" class="px-6 py-4">
+                    <div class="flex items-center justify-end gap-2 w-full">
+                        <button type="button" aria-label="Edit Order" onclick="editOrder('${o.id}'); event.stopPropagation();" class="px-4 py-2 text-[10px] font-black text-iosBlue bg-iosBlue/10 hover:bg-iosBlue/20 rounded-xl transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-iosBlue tracking-widest uppercase btn-apple">Edit</button>
+                        <button type="button" aria-label="Delete Order" onclick="confirmDelete('${o.id}'); event.stopPropagation();" class="px-4 py-2 text-[10px] font-black text-iosRed bg-iosRed/10 hover:bg-iosRed/20 rounded-xl transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-iosRed tracking-widest uppercase btn-apple">Del</button>
+                    </div>
                 </td>
             </tr>
         `).join('');
@@ -528,8 +654,6 @@
 
     function handleForm(e) {
         e.preventDefault();
-        
-        // Hide iPad Keyboard on Submit
         document.activeElement.blur(); 
 
         const id = document.getElementById('fId').value;
@@ -541,9 +665,9 @@
 
         const record = {
             id: id || Date.now().toString(),
-            name: document.getElementById('fName').value,
-            location: document.getElementById('fLoc').value,
-            product: document.getElementById('fProd').value,
+            name: (document.getElementById('fName').value || '').trim(),
+            location: (document.getElementById('fLoc').value || '').trim(),
+            product: (document.getElementById('fProd').value || '').trim(),
             price: p, material: m, labour: l, packaging: pk, delivery_cost: d,
             profit: p - (m + l + pk + d),
             making: document.getElementById('fMaking').value,
@@ -561,6 +685,8 @@
             UI.toast("ORDER CREATED");
         }
 
+        // Return to first page on successful form submission so new records are visible
+        currentPage = 1;
         saveAndSync();
         closeModal();
     }
@@ -583,6 +709,7 @@
         dialog.classList.add('flex');
         
         document.getElementById('confirmBtn').onclick = confirmCallback;
+        document.getElementById('confirmBtn').focus();
 
         requestAnimationFrame(() => {
             dialog.classList.remove('opacity-0');
@@ -607,17 +734,17 @@
         if(!o) return;
         document.getElementById('modalTitle').innerText = "Update Record";
         document.getElementById('fId').value = o.id;
-        document.getElementById('fName').value = o.name;
-        document.getElementById('fLoc').value = o.location;
-        document.getElementById('fProd').value = o.product;
+        document.getElementById('fName').value = o.name || '';
+        document.getElementById('fLoc').value = o.location || '';
+        document.getElementById('fProd').value = o.product || '';
         document.getElementById('fPrice').value = o.price || '';
         document.getElementById('fMat').value = o.material || '';
         document.getElementById('fLab').value = o.labour || '';
         document.getElementById('fPkg').value = o.packaging || '';
         document.getElementById('fDel').value = o.delivery_cost || '';
-        document.getElementById('fMaking').value = o.making;
-        document.getElementById('fDelivery').value = o.delivery;
-        document.getElementById('fPayment').value = o.payment;
+        document.getElementById('fMaking').value = o.making || 'Done';
+        document.getElementById('fDelivery').value = o.delivery || 'Delivered';
+        document.getElementById('fPayment').value = o.payment || 'Paid';
         liveCalc();
         openModal();
     }
@@ -649,11 +776,13 @@
             try {
                 const wb = XLSX.read(evt.target.result, {type: 'array'});
                 const data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-                const valid = data.map(r => ({
-                    id: Math.random().toString(36).substr(2, 9),
-                    name: r.Name || r.Customer || "Unknown",
-                    product: r.Product || r.Item || "Item",
-                    location: r.Location || r.City || "",
+                
+                // Add robust randomization to ID to prevent overlap on bulk imports sorting
+                const valid = data.map((r, idx) => ({
+                    id: String(Date.now() + idx) + Math.random().toString(36).substring(2, 5), 
+                    name: (r.Name || r.Customer || "Unknown").trim(),
+                    product: (r.Product || r.Item || "Item").trim(),
+                    location: (r.Location || r.City || "").trim(),
                     price: Number(r.Price || 0),
                     material: Number(r.Material || 0),
                     labour: Number(r.Labour || 0),
@@ -664,6 +793,8 @@
                     payment: r.Payment || "Paid"
                 }));
                 db = [...valid, ...db];
+                
+                currentPage = 1;
                 saveAndSync();
                 UI.toast(`IMPORTED ${valid.length} ROWS`);
             } catch (err) { UI.toast("IMPORT FAILED", "error"); }
@@ -679,6 +810,8 @@
         overlay.classList.remove('hidden');
         overlay.classList.add('flex');
         
+        setTimeout(() => document.getElementById('fName').focus(), 100);
+
         requestAnimationFrame(() => {
             overlay.classList.remove('opacity-0');
             content.classList.remove('scale-95', 'translate-y-4');
@@ -691,7 +824,6 @@
         const overlay = document.getElementById('modalOverlay');
         const content = document.getElementById('modalContent');
         
-        // Hide keyboard on iPad immediately
         document.activeElement.blur();
 
         overlay.classList.add('opacity-0');
