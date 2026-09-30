@@ -98,7 +98,7 @@
         -moz-appearance: none;
         appearance: none;
         width: 120px;
-        /* Replaced explicit height with symmetrical padding for perfect vertical centering across all OS engines */
+        /* Symmetrical padding for perfect vertical centering across all OS engines */
         padding-top: 10px;
         padding-bottom: 10px;
         padding-left: 8px;
@@ -156,7 +156,6 @@
     @keyframes slideIn { from { opacity: 0; transform: translateY(15px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
     .animate-entry { animation: slideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
-    /* Only apply hover states on devices with a mouse to prevent sticky hover on iPad */
     @media (hover: hover) {
         th.sortable:hover { background: rgba(0,0,0,0.05); }
         .dark th.sortable:hover { background: rgba(255,255,255,0.05); }
@@ -184,7 +183,7 @@
       </div>
       <div class="flex items-center gap-2">
         <button type="button" aria-label="Toggle Dark Mode" onclick="toggleDarkMode()" class="p-3 rounded-full bg-black/5 dark:bg-white/5 transition-colors text-lg focus-visible:ring-2 focus-visible:ring-iosBlue focus:outline-none" id="themeBtn">🌙</button>
-        <button type="button" onclick="openModal()" class="btn-apple bg-iosBlue text-white px-5 py-3 sm:py-2.5 rounded-full text-xs sm:text-[10px] font-black shadow-lg shadow-blue-500/20 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-iosBlue focus:outline-none">
+        <button type="button" onclick="createNewOrder()" class="btn-apple bg-iosBlue text-white px-5 py-3 sm:py-2.5 rounded-full text-xs sm:text-[10px] font-black shadow-lg shadow-blue-500/20 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-iosBlue focus:outline-none">
           NEW ORDER
         </button>
       </div>
@@ -270,7 +269,7 @@
       <div id="emptyState" class="hidden py-24 flex flex-col items-center justify-center space-y-4 text-center" aria-live="polite">
         <div class="text-6xl opacity-20 grayscale" aria-hidden="true">📭</div>
         <p class="text-iosGray font-black uppercase text-xs tracking-widest opacity-60">Zero records found</p>
-        <button type="button" onclick="openModal()" class="text-xs sm:text-[10px] text-iosBlue font-bold underline p-2 focus-visible:ring-2 focus-visible:ring-iosBlue rounded focus:outline-none">Add your first order</button>
+        <button type="button" onclick="createNewOrder()" class="text-xs sm:text-[10px] text-iosBlue font-bold underline p-2 focus-visible:ring-2 focus-visible:ring-iosBlue rounded focus:outline-none">Add your first order</button>
       </div>
     </section>
 
@@ -457,6 +456,7 @@
     function changePage(page) {
         currentPage = page;
         render();
+        // Smooth scroll to the top of the table for better UX on mobile
         document.getElementById('mainTable').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
@@ -571,6 +571,7 @@
             `;
 
             for (let i = 1; i <= totalPages; i++) {
+                // To prevent overflowing the UI if there are too many pages, limit visual buttons
                 if (totalPages > 7 && (i !== 1 && i !== totalPages && Math.abs(currentPage - i) > 1)) {
                     if (Math.abs(currentPage - i) === 2) {
                         paginationHTML += `<span class="w-10 h-10 flex items-center justify-center font-bold text-iosGray/50" aria-hidden="true">...</span>`;
@@ -600,8 +601,8 @@
 
         const paginated = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
+        // Fixed Clipping logic: Replaced restrictive constraints with break-words & line-clamp limits for text content.
         // Conditional location rendering: Entirely removes 'Local' default and only displays span if location is truthy.
-        // Removed text-align overrides directly on the <td> for selects so the pill retains internal alignment.
         tbody.innerHTML = paginated.map((o, i) => `
             <tr onclick="handleRowInteraction(event, '${o.id}')" class="transition-colors duration-200 animate-entry group cursor-pointer hover:bg-black/5 dark:hover:bg-white/5" style="animation-delay: ${i * 30}ms;">
                 <td data-label="Customer" class="px-6 py-4 align-top-mobile">
@@ -650,6 +651,28 @@
         if(s === 'Paid') return 'bg-iosBlue text-white shadow-md';
         if(s === 'Advance Received') return 'bg-purple-100 text-purple-600';
         return 'bg-iosRed/10 text-iosRed';
+    }
+
+    function clearForm() {
+        document.getElementById('fId').value = "";
+        document.getElementById('fName').value = "";
+        document.getElementById('fLoc').value = "";
+        document.getElementById('fProd').value = "";
+        document.getElementById('fPrice').value = "";
+        document.getElementById('fMat').value = "";
+        document.getElementById('fLab').value = "";
+        document.getElementById('fPkg').value = "";
+        document.getElementById('fDel').value = "";
+        document.getElementById('fMaking').value = "Done";
+        document.getElementById('fDelivery').value = "Delivered";
+        document.getElementById('fPayment').value = "Paid";
+        document.getElementById('modalTitle').innerText = "New Order Entry";
+    }
+
+    function createNewOrder() {
+        clearForm();
+        liveCalc();
+        openModal();
     }
 
     function handleForm(e) {
@@ -833,9 +856,8 @@
             overlay.classList.add('hidden');
             overlay.classList.remove('flex');
             
-            document.getElementById('fId').value = "";
-            document.getElementById('modalTitle').innerText = "New Order Entry";
-            document.querySelector('form').reset();
+            // Re-clearing form logic to ensure UI is entirely flushed when closed manually
+            clearForm();
             liveCalc();
         }, 300); 
     }
